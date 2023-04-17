@@ -31,4 +31,5 @@ jobs:
       - name: ${{ matrix.steps.name }}
         run: |
           nix develop --command \
+          pre-commit run --all-files \
           ${{ matrix.steps.run }}

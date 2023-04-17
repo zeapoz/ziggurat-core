@@ -56,8 +56,7 @@
           devShells.default = pkgs.mkShell {
             inherit (self.checks.${system}.pre-commit-check) shellHook;
 
-            buildInputs = self.buildInputs.${system}
-            ++ (lib.mkCiScripts self.scripts);
+            buildInputs = self.buildInputs.${system};
           };
         }) // {
       scripts = {
