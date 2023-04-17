@@ -5,9 +5,10 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     rust-overlay.url = "github:oxalica/rust-overlay";
+    pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
   };
 
-  outputs = { self, nixpkgs, flake-utils, rust-overlay, ... }:
+  outputs = { self, nixpkgs, flake-utils, rust-overlay, pre-commit-hooks, ... }:
     flake-utils.lib.eachDefaultSystem
       (system:
         let
@@ -15,6 +16,8 @@
           pkgs = import nixpkgs {
             inherit system overlays;
           };
+
+          lib = import ./lib.nix { inherit pkgs; };
 
           # Latest stable rust without rustfmt.
           stable-rust = pkgs.rust-bin.stable.latest.minimal.override {
@@ -35,13 +38,26 @@
           ];
         in
         {
-          inherit buildInputs;
+          inherit lib buildInputs;
 
-          lib = import ./lib.nix { inherit pkgs; };
+          checks = {
+            pre-commit-check = pre-commit-hooks.lib.${system}.run {
+              src = ./.;
+              hooks = {
+                # Nix.
+                deadnix.enable = true;
+                nil.enable = true;
+                nixpkgs-fmt.enable = true;
+                statix.enable = true;
+              } // (lib.mkCiHooks self.scripts);
+            };
+          };
 
           devShells.default = pkgs.mkShell {
+            inherit (self.checks.${system}.pre-commit-check) shellHook;
+
             buildInputs = self.buildInputs.${system}
-            ++ (self.lib.${system}.mkCiScripts self.scripts);
+            ++ (lib.mkCiScripts self.scripts);
           };
         }) // {
       scripts = {
