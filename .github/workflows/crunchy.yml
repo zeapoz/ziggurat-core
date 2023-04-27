@@ -5,9 +5,6 @@ on:
         required: true
         type: string
 
-env:
-  FILTER: {{ inputs.filter }}
-
 jobs:
   crunchy:
     runs-on: ubuntu-latest
@@ -15,7 +12,6 @@ jobs:
       fail-fast: false
       matrix:
         filter: [ true, false ]
-
     steps:
       - uses: actions/checkout@v3
         with:
@@ -32,7 +28,7 @@ jobs:
         name: Generate filtered sample
         run: |
           cargo r -- --input-sample latest.json \
-          --out-state latest-filtered.json --filter-type $FILTER
+          --out-state latest-filtered.json --filter-type ${{ inputs.filter }}
       - if: ${{ !matrix.filter }}
         name: Generate unfiltered sample
         run: |
