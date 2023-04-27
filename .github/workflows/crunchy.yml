@@ -5,11 +5,12 @@ on:
         required: true
         type: string
 
+env:
+  FILTER: {{ inputs.filter }}
+
 jobs:
   crunchy:
     runs-on: ubuntu-latest
-    env:
-      FILTER: {{ inputs.filter }}
     strategy:
       fail-fast: false
       matrix:
