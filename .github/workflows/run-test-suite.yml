@@ -1,0 +1,30 @@
+on:
+  workflow_call:
+    inputs:
+      node-commit-hash:
+        type: string
+        required: true
+
+jobs:
+  run-suite:
+    runs-on: ubuntu-latest
+    env:
+      COMMIT_HASH: ${{ inputs.node-commit-hash }}
+    steps:
+      - name: Cleanup temp files and prepare test binary
+        run: |
+          rm ./ziggurat/*.d
+          mv ./ziggurat/ziggurat_* ziggurat_test
+          chmod +x ziggurat_test
+      - name: Procure metadata
+        run: |
+          echo "{ \"type\": \"node\", \"commit\": \""$COMMIT_HASH"\" }" > latest.jsonl
+      - name: Run ziggurat suite
+        continue-on-error: true
+        run: |
+          ./ziggurat_test --test-threads=1 --nocapture -Z unstable-options --report-time --format json >> latest.jsonl
+      - run: cat latest.jsonl
+      - uses: actions/upload-artifact@v3
+        with:
+          name: latest-result
+          path: latest.jsonl
