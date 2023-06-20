@@ -12,9 +12,14 @@ jobs:
       EXTRA_ARGS: ${{ inputs.extra-args }}
     steps:
       - uses: actions/checkout@v3
-      - run: rustup toolchain install nightly --profile minimal
+      - uses: Swatinem/rust-cache@v2
+      - uses: cachix/install-nix-action@v19
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Compile unit tests
-        run: cargo +nightly test --all-targets --no-run $EXTRA_ARGS
+        run: |
+          nix develop --command \
+          cargo test --all-targets --no-run $EXTRA_ARGS
       - uses: actions/upload-artifact@v3
         with:
           name: ziggurat-executable
